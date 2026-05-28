@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>H.A SOLAR</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f59e0b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="H.A Solar">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Botão instalar — flutua no canto, some após instalar */
+    #btnInstalar {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      z-index: 9999;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(245,158,11,.5);
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <iframe
+src="https://script.google.com/macros/s/AKfycby9mStgldJukm-SJz-gcQ3YpWSndTD2KG0qjqaXRgVdjGvu5LmA-N0p3PM2qocHX70U/exec"
+    allow="geolocation; camera; microphone"
+    allowfullscreen>
+  </iframe>
+
+  <!-- Botão instalar PWA (aparece automaticamente quando o browser libera) -->
+  <button id="btnInstalar" onclick="instalarPWA()">
+    📲 Instalar app
+  </button>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function (reg) { console.log('SW ok:', reg.scope); })
+          .catch(function (err) { console.warn('SW falhou:', err); });
+      });
+    }
+
+    var _pwaPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      _pwaPrompt = e;
+      // Chrome liberou — mostra botão flutuante
+      document.getElementById('btnInstalar').style.display = 'flex';
+    });
+
+    window.addEventListener('appinstalled', function () {
+      _pwaPrompt = null;
+      document.getElementById('btnInstalar').style.display = 'none';
+    });
+
+    function instalarPWA() {
+      if (_pwaPrompt) {
+        // Chrome suporta instalação automática
+        _pwaPrompt.prompt();
+        _pwaPrompt.userChoice.then(function (r) {
+          _pwaPrompt = null;
+          document.getElementById('btnInstalar').style.display = 'none';
+        });
+      } else {
+        // Fallback: mostra instruções manuais por navegador
+        var ua = navigator.userAgent;
+        var msg = '';
+        if (/iPhone|iPad/i.test(ua)) {
+          msg = '🍎 iPhone/iPad:\nSafari → toque em Compartilhar (□↑) → "Adicionar à Tela de Início"';
+        } else if (/Android/i.test(ua)) {
+          msg = '🤖 Android:\nChrome → toque nos 3 pontos (⋮) → "Adicionar à tela inicial"';
+        } else {
+          msg = '🖥️ Desktop (Chrome/Edge):\nClique no ícone ⊕ na barra de endereço\nou Menu → "Instalar H.A Solar"';
+        }
+        alert(msg);
+      }
+    }
+
+    // Não mostra se já está instalado
+    var jaInstalado = window.matchMedia('(display-mode: standalone)').matches
+                   || window.navigator.standalone === true;
+
+    if (!jaInstalado) {
+      var btn = document.getElementById('btnInstalar');
+      btn.style.display = 'flex';
+
+      // Some sozinho após 30 segundos
+      var timer = setTimeout(function() {
+        esconderBtn();
+      }, 30000);
+
+      function esconderBtn() {
+        clearTimeout(timer);
+        btn.style.transition = 'opacity 0.5s';
+        btn.style.opacity = '0';
+        setTimeout(function() { btn.style.display = 'none'; }, 500);
+      }
+
+      // Some imediatamente após clicar
+      btn.addEventListener('click', function() {
+        setTimeout(esconderBtn, 500);
+      }, { once: true });
+    }
+  </script>
+
+</body>
+</html>
